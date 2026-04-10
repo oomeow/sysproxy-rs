@@ -3,9 +3,7 @@ use std::{env, process::Command, str::from_utf8, sync::LazyLock};
 
 const CMD_KEY: &str = "org.gnome.system.proxy";
 
-static IS_APPIMAGE: LazyLock<bool> = LazyLock::new(|| {
-    std::env::var("APPIMAGE").is_ok()
-});
+static IS_APPIMAGE: LazyLock<bool> = LazyLock::new(|| std::env::var("APPIMAGE").is_ok());
 
 impl Sysproxy {
     pub fn get_system_proxy() -> Result<Sysproxy> {
@@ -178,26 +176,26 @@ impl Sysproxy {
                 let config = config.to_str().ok_or(Error::ParseStr("config".into()))?;
 
                 let bypass = self
-                .bypass
-                .split(',')
-                .map(|h| {
-                    let mut host = String::from(h.trim());
-                    if !host.starts_with('\'') && !host.starts_with('"') {
-                        host = String::from("'") + &host;
-                    }
-                    if !host.ends_with('\'') && !host.ends_with('"') {
-                        host += "'";
-                    }
-                    host
-                })
-                .collect::<Vec<String>>()
-                .join(", ");
+                    .bypass
+                    .split(',')
+                    .map(|h| {
+                        let mut host = String::from(h.trim());
+                        if !host.starts_with('\'') && !host.starts_with('"') {
+                            host = String::from("'") + &host;
+                        }
+                        if !host.ends_with('\'') && !host.ends_with('"') {
+                            host += "'";
+                        }
+                        host
+                    })
+                    .collect::<Vec<String>>()
+                    .join(", ");
 
                 let bypass = format!("[{bypass}]");
 
                 gsettings()
-                .args(["set", CMD_KEY, "ignore-hosts", bypass.as_str()])
-                .status()?;
+                    .args(["set", CMD_KEY, "ignore-hosts", bypass.as_str()])
+                    .status()?;
 
                 kwriteconfig()
                     .args([
@@ -327,7 +325,7 @@ fn set_proxy(proxy: &Sysproxy, service: &str) -> Result<()> {
                     schema,
                 ])
                 .status()?;
-     
+
             Ok(())
         }
         _ => {

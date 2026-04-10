@@ -1,4 +1,5 @@
 use crate::{Autoproxy, Error, Result, Sysproxy};
+use log::debug;
 use std::{
     ffi::c_void,
     mem::{size_of, ManuallyDrop},
@@ -60,7 +61,7 @@ fn unset_proxy() -> Result<()> {
     for ras_conn in ras_conns.iter() {
         opts.pszConnection = PWSTR::from_raw(encode_wide(ras_conn).as_ptr() as *mut u16);
         apply(&opts)?;
-        println!("unset RAS[{ras_conn}] proxy success");
+        debug!("unset RAS[{ras_conn}] proxy success");
     }
 
     unsafe {
@@ -106,7 +107,7 @@ fn set_auto_proxy(server: String) -> Result<()> {
     for ras_conn in ras_conns.iter() {
         opts.pszConnection = PWSTR::from_raw(encode_wide(ras_conn).as_ptr() as *mut u16);
         apply(&opts)?;
-        println!("set RAS[{ras_conn}] auto proxy success");
+        debug!("set RAS[{ras_conn}] auto proxy success");
     }
 
     unsafe {
@@ -159,7 +160,7 @@ fn set_global_proxy(server: String, bypass: String) -> Result<()> {
     for ras_conn in ras_conns.iter() {
         opts.pszConnection = PWSTR::from_raw(encode_wide(ras_conn).as_ptr() as *mut u16);
         apply(&opts)?;
-        println!("set RAS[{ras_conn}] global proxy success");
+        debug!("set RAS[{ras_conn}] global proxy success");
     }
 
     unsafe {
@@ -248,7 +249,7 @@ impl Autoproxy {
 ///
 /// 获取所有远程访问服务 （包含拨号连接和 VPN 连接）
 fn get_ras_connections() -> Result<Vec<String>> {
-    println!("start get RAS connections...");
+    debug!("start get RAS connections...");
     let mut connections = Vec::new();
 
     unsafe {
@@ -264,7 +265,7 @@ fn get_ras_connections() -> Result<Vec<String>> {
             &mut entry_count,
         );
 
-        println!("get allocate buffer size result code: {result_code}");
+        debug!("get allocate buffer size result code: {result_code}");
         if result_code == ERROR_BUFFER_TOO_SMALL {
             // Allocate the memory needed for the array of RAS entry names.
             let buffer_ptr = HeapAlloc(GetProcessHeap()?, HEAP_ZERO_MEMORY, buffer_size as usize);
@@ -285,7 +286,7 @@ fn get_ras_connections() -> Result<Vec<String>> {
                 &mut entry_count,
             );
             // 如果函数成功，则返回值 ERROR_SUCCESS, 但是该 API 返回 u32, 参照对比 ERROR_SUCCESS 后，该值应该为 0
-            println!("get RAS entries result code: {result_code}");
+            debug!("get RAS entries result code: {result_code}");
             if result_code == 0 && entry_count > 0 {
                 for i in 0..entry_count as isize {
                     let entry = &*lp_ras_entry_name.offset(i);
@@ -295,7 +296,7 @@ fn get_ras_connections() -> Result<Vec<String>> {
                     let name = String::from_utf16_lossy(&name_arr[..len]);
                     connections.push(name);
                 }
-                println!(
+                debug!(
                     "找到 {} 个拨号连接/VPN, {:?}",
                     connections.len(),
                     connections
@@ -307,9 +308,9 @@ fn get_ras_connections() -> Result<Vec<String>> {
         }
 
         if entry_count >= 1 {
-            println!("The operation failed to acquire the buffer size");
+            debug!("The operation failed to acquire the buffer size");
         } else {
-            println!("There were no RAS entry names found");
+            debug!("There were no RAS entry names found");
         }
     }
 
